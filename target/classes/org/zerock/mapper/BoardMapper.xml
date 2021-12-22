@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zerock.mapper.BoardMapper">
+	<select id="list" resultType="org.zerock.domain.BoardVO">
+	select rownum, bno, title, writer, text, date,thumbnail
+		from (
+			select @rownum:=@rownum+1 as rownum, b.* 
+			from (
+				select @rownum:=0
+				) as tmp, board as b
+			order by bno desc
+		) as boardlist	
+		<![CDATA[
+			where rownum > (#{pageNum} - 1) * #{amount} and rownum <= #{pageNum} * #{amount}
+		]]>
+	</select>	
+	<select id="totalCount" resultType="int">
+		select count(*) from board where bno>0
+	</select>
+	<insert id="create">
+		insert into board (title,text,thumbnail) values(#{title},#{text},#{thumbnail});
+		<selectKey keyProperty="bno" order="AFTER" resultType="int">
+			select max(bno) from board
+		</selectKey>
+	</insert>
+	<select id="read" resultType="org.zerock.domain.BoardVO">
+		select * from board where bno = #{bno}
+	</select>
+	<update id="update">
+		update board
+		set title=#{title},
+			text=#{text},
+			thumbnail=#{thumbnail}
+		where bno=#{bno}
+	</update>
+	<delete id="delete">
+		delete from board where bno=#{bno}
+	</delete>
+	<update id="updateReplyCnt">
+		update board
+		set replycnt = replycnt + #{amount} 
+		where bno = #{bno}
+	</update>
+	<update id="updateHit">
+      update board set hit = hit + 1
+      where bno = #{bno}      
+   </update>
+</mapper>
